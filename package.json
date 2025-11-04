@@ -1,0 +1,22 @@
+{
+    "name": "everybody-codes-2025",
+    "description": "TypeScript scripts for Everybody Codes 2025",
+    "type": "module",
+    "scripts": {
+        "build": "tsc",
+        "quest": "tsx src/runner.ts",
+        "clean": "rm -rf dist",
+        "type-check": "tsc --noEmit",
+        "format:check": "prettier --check src/**/*.ts",
+        "format": "prettier --write src/**/*.ts"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "prettier": "^3.6.2",
+        "tsx": "^4.6.2",
+        "typescript": "^5.3.3"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
