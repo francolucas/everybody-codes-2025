@@ -6,20 +6,58 @@ export function parseLines(input: string): string[] {
 }
 
 /**
- * Utility function to parse input into a 2D grid
- */
-export function parseGrid(input: string): string[][] {
-    return parseLines(input).map(line => line.split(''));
-}
-
-/**
  * Utility function to measure execution time
  */
-export function measureTime<T>(fn: () => T): { result: T; timeMs: number } {
+function measureTime<T>(fn: () => T): { result: T; timeMs: number } {
     const start = performance.now();
     const result = fn();
     const end = performance.now();
     return { result, timeMs: end - start };
+}
+
+/**
+ * Parse command line arguments for quest runner
+ */
+function parseQuestArgs(): { availableParts: number[]; inputs: string[] } {
+    const args = process.argv.slice(2);
+    const availablePartsIndex = args.indexOf('--available-parts');
+
+    if (availablePartsIndex !== -1 && availablePartsIndex + 1 < args.length) {
+        const partsArg = args[availablePartsIndex + 1];
+        const availableParts = partsArg
+            ? partsArg.split(',').map(Number)
+            : [1, 2, 3];
+        const inputs = args.slice(0, availablePartsIndex);
+        return { availableParts, inputs };
+    }
+
+    const inputs = args.slice(0, 3);
+    const availableParts = [1, 2, 3].slice(
+        0,
+        inputs.filter(input => input?.trim()).length
+    );
+    return { availableParts, inputs };
+}
+
+/**
+ * Get solver function for the given part number
+ */
+function getSolverFunction(
+    partNum: number,
+    solvePart1: (input: string) => number | string,
+    solvePart2: (input: string) => number | string,
+    solvePart3: (input: string) => number | string
+): (input: string) => number | string {
+    switch (partNum) {
+        case 1:
+            return solvePart1;
+        case 2:
+            return solvePart2;
+        case 3:
+            return solvePart3;
+    }
+
+    throw new Error(`Unknown part number: ${partNum}`);
 }
 
 /**
@@ -31,31 +69,7 @@ export function runQuest(
     solvePart2: (input: string) => number | string,
     solvePart3: (input: string) => number | string
 ) {
-    // Parse available parts from command line
-    const args = process.argv.slice(2);
-    const availablePartsIndex = args.findIndex(
-        arg => arg === '--available-parts'
-    );
-
-    let availableParts: number[] = [1, 2, 3]; // default to all parts
-    let inputs: string[] = [];
-
-    if (availablePartsIndex !== -1 && availablePartsIndex + 1 < args.length) {
-        // Extract available parts and corresponding inputs
-        const partsArg = args[availablePartsIndex + 1];
-        if (partsArg) {
-            availableParts = partsArg.split(',').map(Number);
-        }
-        inputs = args.slice(0, availablePartsIndex);
-    } else {
-        // Fallback: assume first 3 arguments are inputs for parts 1, 2, 3
-        inputs = args.slice(0, 3);
-        // Only include parts that have inputs
-        availableParts = [1, 2, 3].slice(
-            0,
-            inputs.filter(input => input?.trim()).length
-        );
-    }
+    const { availableParts, inputs } = parseQuestArgs();
 
     if (inputs.length === 0) {
         console.error('No inputs provided');
@@ -67,38 +81,31 @@ export function runQuest(
     try {
         let totalTime = 0;
 
-        // Run available parts
-        availableParts.forEach((partNum, index) => {
+        for (const [index, partNum] of availableParts.entries()) {
             if (index >= inputs.length) {
                 console.warn(
-                    `⚠️  Part ${partNum}: No input available - skipped`
+                    `⏩ Part ${partNum}: No input available - skipped`
                 );
-                return;
+                continue;
             }
 
             const input = inputs[index];
             if (!input?.trim()) {
-                console.warn(`⚠️  Part ${partNum}: Empty input - skipped`);
-                return;
+                console.warn(`⏩ Part ${partNum}: Empty input - skipped`);
+                continue;
             }
 
-            let solveFn: (input: string) => number | string;
-
-            switch (partNum) {
-                case 1:
-                    solveFn = solvePart1;
-                    break;
-                case 2:
-                    solveFn = solvePart2;
-                    break;
-                case 3:
-                    solveFn = solvePart3;
-                    break;
-                default:
-                    console.warn(
-                        `⚠️  Part ${partNum}: Unknown part number - skipped`
-                    );
-                    return;
+            const solveFn = getSolverFunction(
+                partNum,
+                solvePart1,
+                solvePart2,
+                solvePart3
+            );
+            if (!solveFn) {
+                console.warn(
+                    `⏩ Part ${partNum}: Unknown part number - skipped`
+                );
+                continue;
             }
 
             const { result, timeMs } = measureTime(() => solveFn(input));
@@ -106,14 +113,14 @@ export function runQuest(
                 `✅ Part ${partNum}: ${result} (${timeMs.toFixed(2)}ms)`
             );
             totalTime += timeMs;
-        });
+        }
 
         if (availableParts.length < 3) {
             const missingParts = [1, 2, 3].filter(
                 p => !availableParts.includes(p)
             );
             console.info(
-                `⚠️  Parts ${missingParts.join(', ')} skipped (missing inputs)`
+                `⏩ Parts ${missingParts.join(', ')} skipped (missing inputs)`
             );
         }
 

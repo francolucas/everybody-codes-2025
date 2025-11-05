@@ -19,7 +19,7 @@ function findNameIndex(
     const size = names.length;
 
     const direction = instruction[0];
-    const steps = Number.parseInt(instruction.slice(1), 10);
+    const steps = Number(instruction.slice(1));
 
     if (!loop) {
         return direction === 'L'
