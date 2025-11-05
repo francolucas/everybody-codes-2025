@@ -7,8 +7,8 @@
         "quest": "tsx src/runner.ts",
         "clean": "rm -rf dist",
         "type-check": "tsc --noEmit",
-        "format:check": "prettier --check src/**/*.ts",
-        "format": "prettier --write src/**/*.ts"
+        "format:check": "prettier --check .",
+        "format": "prettier --write ."
     },
     "devDependencies": {
         "@types/node": "^20.10.0",

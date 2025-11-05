@@ -3,87 +3,82 @@ import { parseLines, runQuest } from './utils.js';
 function getData(input: string): {
     names: string[];
     instructions: string[];
-    size: number;
 } {
     const lines = parseLines(input);
     const names = lines[0]?.split(',') || [];
     const instructions = lines[2]?.split(',') || [];
-    return { names, instructions, size: names.length };
+    return { names, instructions };
+}
+
+function findNameIndex(
+    names: string[],
+    instruction: string,
+    nameIndex: number,
+    loop: boolean
+): number {
+    const size = names.length;
+
+    const direction = instruction[0];
+    const steps = Number.parseInt(instruction.slice(1), 10);
+
+    if (!loop) {
+        return direction === 'L'
+            ? Math.max(nameIndex - steps, 0)
+            : Math.min(nameIndex + steps, size - 1);
+    }
+
+    if (direction === 'L') {
+        const newIndex = nameIndex - steps;
+
+        if (newIndex >= 0) {
+            return newIndex;
+        }
+
+        if (Math.abs(newIndex) > size) {
+            return size - (Math.abs(newIndex) % size);
+        }
+        return size - Math.abs(newIndex);
+    }
+
+    const newIndex = nameIndex + steps;
+    if (newIndex >= size) {
+        return newIndex % size;
+    }
+
+    return newIndex;
 }
 
 function solvePart1(input: string): string {
-    const { names, instructions, size } = getData(input);
+    const { names, instructions } = getData(input);
     let nameIndex = 0;
 
     for (const instruction of instructions) {
-        const direction = instruction[0];
-        const steps = parseInt(instruction.slice(1), 10);
-
-        nameIndex =
-            direction === 'L'
-                ? Math.max(nameIndex - steps, 0)
-                : Math.min(nameIndex + steps, size - 1);
+        nameIndex = findNameIndex(names, instruction, nameIndex, false);
     }
 
     return names[nameIndex] || '';
 }
 
 function solvePart2(input: string): string {
-    const { names, instructions, size } = getData(input);
+    const { names, instructions } = getData(input);
     let nameIndex = 0;
 
     for (const instruction of instructions) {
-        const direction = instruction[0];
-        const steps = parseInt(instruction.slice(1), 10);
-
-        if (direction === 'L') {
-            nameIndex = nameIndex - steps;
-            if (nameIndex < 0) {
-                if (Math.abs(nameIndex) > size) {
-                    nameIndex = size - (Math.abs(nameIndex) % size);
-                } else {
-                    nameIndex = size - Math.abs(nameIndex);
-                }
-            }
-        } else {
-            nameIndex = nameIndex + steps;
-            if (nameIndex >= size) {
-                nameIndex = nameIndex % size;
-            }
-        }
+        nameIndex = findNameIndex(names, instruction, nameIndex, true);
     }
 
     return names[nameIndex] || '';
 }
 
 function solvePart3(input: string): string {
-    const { names, instructions, size } = getData(input);
-    let nameIndex = 0;
+    const { names, instructions } = getData(input);
 
     for (const instruction of instructions) {
-        const direction = instruction[0];
-        const steps = parseInt(instruction.slice(1), 10);
+        const swapIndex = findNameIndex(names, instruction, 0, true);
 
-        if (direction === 'L') {
-            nameIndex = nameIndex - steps;
-            if (nameIndex < 0) {
-                if (Math.abs(nameIndex) > size) {
-                    nameIndex = size - (Math.abs(nameIndex) % size);
-                } else {
-                    nameIndex = size - Math.abs(nameIndex);
-                }
-            }
-        } else {
-            nameIndex = nameIndex + steps;
-            if (nameIndex >= size) {
-                nameIndex = nameIndex % size;
-            }
-        }
-
-        const firstName = names[0] || '';
-        names[0] = names[nameIndex] || '';
-        names[nameIndex] = firstName;
-        nameIndex = 0;
+        const firstItem = names[0] || '';
+        names[0] = names[swapIndex] || '';
+        names[swapIndex] = firstItem;
     }
 
     return names[0] || '';

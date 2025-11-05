@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 
-import { existsSync, readFileSync } from 'fs';
-import { resolve } from 'path';
-import { spawn } from 'child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { spawn } from 'node:child_process';
 
 /**
  * Quest runner script that executes the appropriate quest script
@@ -82,7 +82,9 @@ function main() {
         console.info(
             `Create at least one of the following files in the inputs/ directory:`
         );
-        missingFiles.forEach(file => console.info(`  inputs/${file}`));
+        for (const file of missingFiles) {
+            console.info(`  inputs/${file}`);
+        }
         process.exit(1);
     }
 
@@ -90,10 +92,10 @@ function main() {
 
     // Read available input files and build arguments
     const spawnArgs = ['tsx', questFile];
-    availableInputs.forEach(({ file }) => {
+    for (const { file } of availableInputs) {
         const content = readFileSync(file, 'utf-8').trim();
         spawnArgs.push(content);
-    });
+    }
 
     // Add a flag to indicate which parts are available
     spawnArgs.push(
